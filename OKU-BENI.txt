@@ -1,0 +1,29 @@
+GEZI HESABI - APK OLUSTURMA
+
+Gerekenler: ucretsiz bir GitHub hesabi (github.com) ve bir bilgisayar.
+Bu klasor, APK'yi GitHub'in bulut sunucusunda derletmek icin hazirlandi.
+
+1) github.com'da giris yap, sag ustteki "+" > "New repository" de.
+   Ad: gezi-hesabi, "Private" secili olsun, "Create repository" de.
+
+2) Acilan sayfada "uploading an existing file" baglantisina tikla.
+   Bu zip'i bir klasore cikar, icindeki HER SEYI (www klasoru, .github klasoru,
+   package.json, capacitor.config.json, .gitignore) surukleyip birak.
+   "Commit changes" de.
+
+   .github klasoru gorunmuyorsa (gizli klasor): Add file > Create new file de,
+   dosya adi kutusuna  .github/workflows/apk.yml  yaz, apk.yml dosyasinin
+   icindekini yapistir, "Commit changes" de.
+
+3) Ustteki "Actions" sekmesine gir. "APK derle" calismaya baslar (yaklasik 5-8 dk).
+   Baslamadiysa soldan "APK derle" > "Run workflow" de.
+
+4) Yesil tik cikinca o calismaya tikla, en altta "Artifacts" bolumunden
+   "gezi-hesabi-apk" dosyasini indir. Zip'ten app-debug.apk cikar.
+
+5) APK'yi telefona gonder, ac. Android "bilinmeyen kaynaklardan yukleme" izni
+   isteyecek, izin ver. Kurulumdan sonra "Gezi Hesabi" simgesi gorunur.
+
+Hata alirsan: Actions'taki kirmizi calismayi ac, hata yazisini kopyalayip bana gonder.
+Not: Bu bir "debug" APK'dir, kendi telefonlarinizda kullanmak icin yeterlidir,
+Play Store'a yuklenemez. Veriler her telefonda ayri saklanir.

@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Gezi Hesabı</title>
+</head>
+<body>
+<style>
+/* Düzen: telefonda tek sütun (girdi, sonra özet, sonra ayrıntı); geniş ekranda sol girdi, sağ sonuç. */
+:root{
+  --bg:#EEF3F3; --surface:#FFFFFF; --surface-2:#E7EFEF;
+  --ink:#13242B; --muted:#5A6E76; --line:#D3E0E1;
+  --accent:#0B6E78; --accent-ink:#FFFFFF; --accent-soft:#DDF0F0;
+  --good:#12703F; --bad:#B8322A;
+  --font-display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --font-body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0C171B; --surface:#13242A; --surface-2:#1A2F36;
+    --ink:#E4EEF0; --muted:#98ADB3; --line:#26414A;
+    --accent:#5CC6CF; --accent-ink:#06262B; --accent-soft:#143A40;
+    --good:#58D08E; --bad:#FF8A80;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C171B; --surface:#13242A; --surface-2:#1A2F36;
+  --ink:#E4EEF0; --muted:#98ADB3; --line:#26414A;
+  --accent:#5CC6CF; --accent-ink:#06262B; --accent-soft:#143A40;
+  --good:#58D08E; --bad:#FF8A80;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--font-body); font-size:16px; line-height:1.5;
+  padding-block:20px 40px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap{max-width:980px;margin:0 auto}
+header{margin-bottom:16px}
+h1{margin:0;font-family:var(--font-display);font-weight:700;font-size:1.9rem;line-height:1.1;text-wrap:balance}
+.sub{margin:6px 0 0;color:var(--muted)}
+h2{margin:0 0 12px;font-family:var(--font-display);font-weight:600;font-size:1.15rem;text-wrap:balance}
+
+.grid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+.col{display:grid;gap:16px;min-width:0;align-content:start}
+@media (min-width:820px){
+  .grid{grid-template-columns:minmax(0,5fr) minmax(0,6fr);align-items:start}
+}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.panel.lead{background:var(--accent-soft);border-color:transparent}
+.panel.tools{margin-top:16px}
+
+label{display:block;font-size:.85rem;font-weight:500;color:var(--muted);margin:12px 0 4px}
+input,select{
+  width:100%; min-width:0; min-height:46px; padding:10px 12px;
+  border:1px solid var(--line); border-radius:10px;
+  background:var(--bg); color:var(--ink);
+  font:inherit; font-size:16px;
+}
+input::placeholder{color:var(--muted);opacity:.8}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+button{
+  cursor:pointer; border:0; border-radius:10px; min-height:46px; padding:10px 18px;
+  font:inherit; font-size:.95rem; font-weight:600;
+  background:var(--accent); color:var(--accent-ink);
+}
+button:hover{filter:brightness(1.08)}
+button:active{transform:translateY(1px)}
+button.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);font-weight:500}
+button.ghost:hover{color:var(--ink);border-color:var(--muted);filter:none}
+button.small{min-height:36px;padding:4px 12px;font-size:.85rem}
+
+.row{display:flex;gap:8px}
+.row input{flex:1}
+.row button{flex:none}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chip{display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border-radius:999px;padding:2px 2px 2px 14px;font-weight:500}
+.chip button{background:transparent;color:var(--muted);min-height:36px;min-width:36px;padding:0;font-size:1.25rem;line-height:1;border-radius:999px}
+.chip button:hover{color:var(--bad);filter:none}
+
+.checks{display:flex;flex-wrap:wrap;gap:8px}
+.checks label{
+  display:inline-flex;align-items:center;gap:8px;margin:0;min-height:42px;padding:6px 14px;
+  border:1px solid var(--line);border-radius:999px;background:var(--bg);
+  color:var(--ink);font-size:.95rem;font-weight:500;cursor:pointer;
+}
+.checks input{width:18px;min-height:0;height:18px;margin:0;accent-color:var(--accent)}
+
+.muted{color:var(--muted)}
+.empty{color:var(--muted);padding:4px 0}
+.msg{color:var(--bad);font-size:.9rem;min-height:1.3em;margin-top:8px}
+
+ul{list-style:none;margin:0;padding:0}
+li.item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.panel.lead li.item{border-color:var(--line)}
+li.item:last-child{border-bottom:0;padding-bottom:0}
+li.item:first-child{padding-top:0}
+li.item > div,li.item > strong{min-width:0;overflow-wrap:anywhere}
+li.item > div + div{flex:none;text-align:right}
+.amt{font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pos{color:var(--good)} .neg{color:var(--bad)}
+.pay{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.arrow{color:var(--muted)}
+.total{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px;font-weight:600;font-variant-numeric:tabular-nums}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+.toolbar .field{flex:0 0 150px}
+.toolbar .field label{margin-top:0}
+.toolbar .spacer{flex:1 1 0}
+.copyout{display:none;width:100%;margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;font-size:16px}
+footer{margin-top:16px;color:var(--muted);font-size:.85rem}
+@media (prefers-reduced-motion: reduce){ button:active{transform:none} }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Gezi Hesabı</h1>
+    <p class="sub">Ortak harcamaları gir, kim kime ne kadar ödeyecek otomatik çıksın.</p>
+  </header>
+
+  <main class="grid">
+    <div class="col">
+      <section class="panel">
+        <h2>Kişiler</h2>
+        <div id="personForm" class="row">
+          <input id="personName" placeholder="İsim ekle, örneğin Ayşe" maxlength="30" autocomplete="off" enterkeyhint="done">
+          <button type="button" id="addPersonBtn">Ekle</button>
+        </div>
+        <div class="msg" id="personMsg"></div>
+        <div class="chips" id="people"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Harcama ekle</h2>
+        <div id="expenseForm">
+          <label for="desc" style="margin-top:0">Ne için?</label>
+          <input id="desc" placeholder="Akşam yemeği, benzin, otel" maxlength="60" autocomplete="off">
+          <label for="amount">Tutar</label>
+          <input id="amount" inputmode="decimal" placeholder="0,00" autocomplete="off">
+          <label for="payer">Kim ödedi?</label>
+          <select id="payer"></select>
+          <label>Kimler arasında bölünsün?</label>
+          <div class="checks" id="among"></div>
+          <div style="margin-top:16px"><button type="button" id="addExpenseBtn">Harcamayı ekle</button></div>
+          <div class="msg" id="expMsg"></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="col">
+      <section class="panel lead">
+        <h2>Borçları kapatmak için</h2>
+        <p class="muted" style="margin:-6px 0 12px">En az sayıda ödemeyle herkesin hesabı kapanır.</p>
+        <div id="settle"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Kim ne durumda</h2>
+        <div id="balances"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Harcamalar</h2>
+        <div id="expenses"></div>
+      </section>
+    </div>
+  </main>
+
+  <section class="panel tools">
+    <div class="toolbar">
+      <div class="field">
+        <label for="currency">Para birimi</label>
+        <select id="currency">
+          <option value="₺">₺ TL</option>
+          <option value="€">€ Euro</option>
+          <option value="$">$ Dolar</option>
+          <option value="£">£ Sterlin</option>
+        </select>
+      </div>
+      <div class="spacer"></div>
+      <button class="ghost" id="copyBtn" type="button">Özeti kopyala</button>
+      <button class="ghost" id="resetBtn" type="button">Her şeyi sıfırla</button>
+    </div>
+    <textarea id="copyOut" class="copyout" readonly rows="5"></textarea>
+  </section>
+
+  <footer>Veriler yalnızca bu tarayıcıda saklanır. Aynı bağlantıyı başka biri açarsa kendi boş listesini görür.</footer>
+</div>
+
+<script>
+(function(){
+  var KEY = 'gezi-hesabi-v1';
+  var state = load();
+
+  function load(){
+    try{
+      var s = JSON.parse(localStorage.getItem(KEY));
+      if(s && Array.isArray(s.people) && Array.isArray(s.expenses)) return s;
+    }catch(e){}
+    return {people:[], expenses:[], currency:'₺'};
+  }
+  function save(){
+    try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+  }
+  function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+  function $(id){ return document.getElementById(id); }
+  function esc(s){
+    return String(s).replace(/[&<>"']/g,function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function name(id){
+    var p = state.people.find(function(x){return x.id===id;});
+    return p ? p.name : '?';
+  }
+  function money(cents){
+    var n = (Math.abs(cents)/100).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    return n+' '+state.currency;
+  }
+
+  /* ---- Hesaplama ---- */
+  function computeBalances(){
+    var net = {};
+    state.people.forEach(function(p){ net[p.id]=0; });
+    state.expenses.forEach(function(e){
+      var n = e.among.length;
+      if(!n) return;
+      var base = Math.floor(e.amount/n);
+      var rem = e.amount - base*n;
+      net[e.payer] = (net[e.payer]||0) + e.amount;
+      e.among.forEach(function(id,i){
+        net[id] = (net[id]||0) - (base + (i<rem ? 1 : 0));
+      });
+    });
+    return net;
+  }
+
+  function computeSettlements(net){
+    var cred=[], debt=[];
+    Object.keys(net).forEach(function(id){
+      if(net[id]>0) cred.push({id:id,v:net[id]});
+      else if(net[id]<0) debt.push({id:id,v:-net[id]});
+    });
+    var out=[];
+    while(cred.length && debt.length){
+      cred.sort(function(a,b){return b.v-a.v;});
+      debt.sort(function(a,b){return b.v-a.v;});
+      var c=cred[0], d=debt[0];
+      var x=Math.min(c.v,d.v);
+      out.push({from:d.id,to:c.id,amount:x});
+      c.v-=x; d.v-=x;
+      if(c.v===0) cred.shift();
+      if(d.v===0) debt.shift();
+    }
+    return out;
+  }
+
+  /* ---- Çizim ---- */
+  function render(){
+    $('currency').value = state.currency;
+    renderPeople();
+    renderForm();
+    renderExpenses();
+    var net = computeBalances();
+    renderBalances(net);
+    renderSettle(net);
+  }
+
+  function renderPeople(){
+    var box = $('people');
+    if(!state.people.length){
+      box.innerHTML = '<div class="empty">Henüz kimse yok. Gezideki herkesi ekle.</div>';
+      return;
+    }
+    box.innerHTML = state.people.map(function(p){
+      return '<span class="chip">'+esc(p.name)+'<button type="button" data-del-person="'+p.id+'" title="Kaldır">×</button></span>';
+    }).join('');
+  }
+
+  function renderForm(){
+    var sel = $('payer'), prev = sel.value;
+    sel.innerHTML = state.people.map(function(p){
+      return '<option value="'+p.id+'">'+esc(p.name)+'</option>';
+    }).join('');
+    if(prev && state.people.some(function(p){return p.id===prev;})) sel.value = prev;
+
+    var checked = {};
+    document.querySelectorAll('#among input').forEach(function(i){ checked[i.value]=i.checked; });
+    $('among').innerHTML = state.people.map(function(p){
+      var on = (p.id in checked) ? checked[p.id] : true;
+      return '<label><input type="checkbox" value="'+p.id+'"'+(on?' checked':'')+'> '+esc(p.name)+'</label>';
+    }).join('') || '<span class="empty">Önce kişi ekle.</span>';
+  }
+
+  function renderExpenses(){
+    var box = $('expenses');
+    if(!state.expenses.length){
+      box.innerHTML = '<div class="empty">Henüz harcama yok.</div>';
+      return;
+    }
+    var total = state.expenses.reduce(function(s,e){return s+e.amount;},0);
+    var html = '<div class="total"><span>Toplam harcama</span><span>'+money(total)+'</span></div><ul>';
+    state.expenses.slice().reverse().forEach(function(e){
+      var who = e.among.length===state.people.length ? 'herkes' : e.among.map(name).join(', ');
+      html += '<li class="item"><div><strong>'+esc(e.desc)+'</strong><br><span class="muted">'+esc(name(e.payer))+' ödedi · '+esc(who)+' arasında</span></div>'
+        +'<div style="text-align:right"><div class="amt">'+money(e.amount)+'</div>'
+        +'<button class="ghost small" data-del-exp="'+e.id+'">Sil</button></div></li>';
+    });
+    box.innerHTML = html+'</ul>';
+  }
+
+  function renderBalances(net){
+    var box = $('balances');
+    if(!state.people.length){ box.innerHTML='<div class="empty">Kişi ekleyince burada görünür.</div>'; return; }
+    box.innerHTML = '<ul>'+state.people.map(function(p){
+      var v = net[p.id]||0;
+      var cls = v>0 ? 'pos' : v<0 ? 'neg' : 'muted';
+      var txt = v>0 ? money(v)+' alacaklı' : v<0 ? money(v)+' borçlu' : 'Hesabı kapalı';
+      return '<li class="item"><strong>'+esc(p.name)+'</strong><span class="amt '+cls+'">'+txt+'</span></li>';
+    }).join('')+'</ul>';
+  }
+
+  function renderSettle(net){
+    var box = $('settle');
+    var s = computeSettlements(net);
+    if(!state.expenses.length){ box.innerHTML='<div class="empty">Harcama girince burada önerilen ödemeler görünür.</div>'; return; }
+    if(!s.length){ box.innerHTML='<div class="empty">Kimsenin kimseye borcu yok.</div>'; return; }
+    box.innerHTML = '<ul>'+s.map(function(t){
+      return '<li class="item"><div class="pay"><strong>'+esc(name(t.from))+'</strong><span class="arrow">→</span><strong>'+esc(name(t.to))+'</strong></div><span class="amt">'+money(t.amount)+'</span></li>';
+    }).join('')+'</ul>';
+  }
+
+  /* ---- Olaylar ---- */
+  function addPerson(){
+    var input = $('personName'), n = input.value.trim(), msg = $('personMsg');
+    msg.textContent='';
+    if(!n){ return; }
+    if(state.people.some(function(p){return p.name.toLowerCase()===n.toLowerCase();})){
+      msg.textContent='Bu isim zaten var.'; return;
+    }
+    state.people.push({id:uid(),name:n});
+    input.value=''; save(); render(); input.focus();
+  }
+  $('addPersonBtn').addEventListener('click',addPerson);
+  $('personName').addEventListener('keydown',function(ev){
+    if(ev.key==='Enter'){ ev.preventDefault(); addPerson(); }
+  });
+
+  $('people').addEventListener('click',function(ev){
+    var id = ev.target.getAttribute('data-del-person');
+    if(!id) return;
+    var used = state.expenses.some(function(e){return e.payer===id || e.among.indexOf(id)!==-1;});
+    if(used){
+      $('personMsg').textContent='Bu kişi harcamalarda geçiyor. Önce o harcamaları sil.'; return;
+    }
+    state.people = state.people.filter(function(p){return p.id!==id;});
+    $('personMsg').textContent='';
+    save(); render();
+  });
+
+  /* "1.234,50", "1234,5", "12.5", "300" gibi yazımları kuruşa çevirir */
+  function parseAmount(s){
+    s = String(s).trim().replace(/\s/g,'');
+    if(/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) s = s.replace(/\./g,'').replace(',','.');
+    else s = s.replace(',','.');
+    if(!/^(\d+(\.\d*)?|\.\d+)$/.test(s)) return NaN;
+    return Math.round(parseFloat(s)*100);
+  }
+
+  function addExpense(){
+    var msg = $('expMsg'); msg.textContent='';
+    var desc = $('desc').value.trim();
+    var amount = parseAmount($('amount').value);
+    var payer = $('payer').value;
+    var among = Array.prototype.slice.call(document.querySelectorAll('#among input:checked')).map(function(i){return i.value;});
+    if(state.people.length<2){ msg.textContent='En az 2 kişi eklemelisin.'; return; }
+    if(!desc){ msg.textContent='Harcamanın ne için olduğunu yaz.'; return; }
+    if(!isFinite(amount) || amount<=0){ msg.textContent='Geçerli bir tutar gir.'; return; }
+    if(!among.length){ msg.textContent='En az bir kişi seç.'; return; }
+    state.expenses.push({id:uid(),desc:desc,amount:amount,payer:payer,among:among});
+    $('desc').value=''; $('amount').value='';
+    save(); render(); $('desc').focus();
+  }
+  $('addExpenseBtn').addEventListener('click',addExpense);
+  ['desc','amount'].forEach(function(id){
+    $(id).addEventListener('keydown',function(ev){
+      if(ev.key==='Enter'){ ev.preventDefault(); addExpense(); }
+    });
+  });
+
+  $('expenses').addEventListener('click',function(ev){
+    var id = ev.target.getAttribute('data-del-exp');
+    if(!id) return;
+    state.expenses = state.expenses.filter(function(e){return e.id!==id;});
+    save(); render();
+  });
+
+  $('currency').addEventListener('change',function(){
+    state.currency=this.value; save(); render();
+  });
+
+  var resetTimer = null;
+  $('resetBtn').addEventListener('click',function(){
+    var btn = this;
+    if(resetTimer===null){
+      btn.textContent='Emin misin? Silmek için tekrar tıkla';
+      resetTimer = setTimeout(function(){ resetTimer=null; btn.textContent='Her şeyi sıfırla'; },4000);
+      return;
+    }
+    clearTimeout(resetTimer); resetTimer=null;
+    btn.textContent='Her şeyi sıfırla';
+    state={people:[],expenses:[],currency:state.currency};
+    $('copyOut').style.display='none';
+    save(); render();
+  });
+
+  $('copyBtn').addEventListener('click',function(){
+    var s = computeSettlements(computeBalances());
+    var lines = ['Gezi hesabı:'];
+    if(!s.length) lines.push('Kimsenin borcu yok.');
+    s.forEach(function(t){ lines.push(name(t.from)+' → '+name(t.to)+': '+money(t.amount)); });
+    var text = lines.join('\n'), btn=this;
+    function done(){ btn.textContent='Kopyalandı ✓'; setTimeout(function(){btn.textContent='Özeti kopyala';},1500); }
+    function fallback(){
+      var o = $('copyOut'); o.style.display='block'; o.value=text; o.focus(); o.select();
+    }
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(done,fallback);
+      }else{ fallback(); }
+    }catch(e){ fallback(); }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
